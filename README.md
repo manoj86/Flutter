@@ -37,6 +37,9 @@ dependencies:
   geocoding: ^2.0.4
 
 
+permission_handler: ^8.2.5
+
+
  Asserts used
 
  assets:
@@ -58,6 +61,7 @@ Imports
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
+
 
 
 

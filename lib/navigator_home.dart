@@ -13,12 +13,17 @@ class NavigatorHome extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.black,
           title: const Center(
-            child: Text("Compass"),
+            child: Text("Navigator"),
           ),
         ),
         body: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const <Widget>[CompassBuilder()], //LocationBuilder()],
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const <Widget>[
+            SizedBox(height: 40),
+            LocationBuilder(),
+            SizedBox(height: 20),
+            CompassBuilder()
+          ],
         ),
       ),
     );
