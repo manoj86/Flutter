@@ -1,6 +1,6 @@
 ## Navigator
 
-![Screenshots](https://user-images.githubusercontent.com/3163167/217614587-4be60ce1-7a19-4dad-bc29-f828c3f671b5.png)
+![Screenshot](https://user-images.githubusercontent.com/3163167/217814389-a05091a0-7dda-44ed-8d38-4da097f832db.png)
 
 
 
