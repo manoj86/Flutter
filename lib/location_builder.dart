@@ -16,7 +16,6 @@ class LocationBuilder extends StatefulWidget {
 class _Location extends State<LocationBuilder> {
 
   ServiceStatus? _status;
-  Position? _currentPosition;
   late StreamSubscription<ServiceStatus> serviceStatusStream;
 
 
@@ -24,7 +23,7 @@ class _Location extends State<LocationBuilder> {
   void initState() {
     super.initState();
     PermissionProvider().requestGPSPermission();
-    listenToRequest();
+    listenToServiceStatusChange();
   }
 
   @override
@@ -33,15 +32,17 @@ class _Location extends State<LocationBuilder> {
     super.dispose();
   }
 
-  Future<void> listenToRequest() async {
+
+  Future<void> listenToServiceStatusChange() async {
     _status = await Geolocator.isLocationServiceEnabled() ? ServiceStatus.enabled : ServiceStatus.disabled;
     serviceStatusStream = Geolocator.getServiceStatusStream().listen(
             (ServiceStatus status) {
-              setState(() {
-                _status = status;
-              });
-            });
+          setState(() {
+            _status = status;
+          });
+        });
   }
+
 
 
   @override
@@ -49,9 +50,7 @@ class _Location extends State<LocationBuilder> {
     return StreamBuilder<Position>(
         stream: Geolocator.getPositionStream(locationSettings: const LocationSettings()),
         builder: (context, snapshot) {
-          if (snapshot.data == null) { return _handleError(snapshot); }
-
-          _currentPosition = snapshot.data!;
+          if (snapshot.data == null || !_isGPSoN()) { return _handleLocationDataError(snapshot); }
 
           return Material(
             child: Center(
@@ -62,9 +61,9 @@ class _Location extends State<LocationBuilder> {
                     Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          _getStyledCoordinate('Latitude', _currentPosition!.latitude),
+                          _getStyledCoordinate('Latitude', snapshot.data!.latitude),
                           const SizedBox(width: 45), //Space
-                          _getStyledCoordinate('Longitude', _currentPosition!.longitude)
+                          _getStyledCoordinate('Longitude', snapshot.data!.longitude)
                         ]
                     )
                   ]
@@ -77,14 +76,14 @@ class _Location extends State<LocationBuilder> {
 
 
   //Private Methods
-  Row _handleError(AsyncSnapshot<Position> snapshot) {
-    String msg = _status != null ? _status!.name.toUpperCase() : 'Loading....';
-    MaterialColor valueColor = _status == ServiceStatus.enabled ? Colors.green : Colors.red;
+  Row _handleLocationDataError(AsyncSnapshot<Position> snapshot) {
+    String msg = _status != null ? _status!.name.toUpperCase() : 'Disabled';
+    MaterialColor valueColor = _isGPSoN() ? Colors.green : Colors.red;
     const TextStyle title = TextStyle(fontSize: 18, color: Colors.blue, fontWeight: FontWeight.bold);
 
     Text displayText = Text.rich(
       TextSpan(
-        text: 'Location : ',
+        text: 'Location: ',
         style: title,
         children: <TextSpan>[
           TextSpan(text: msg, style: TextStyle(fontSize: 23, color: valueColor, fontWeight: FontWeight.w600)),
@@ -97,7 +96,7 @@ class _Location extends State<LocationBuilder> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           displayText,
-          if (_status != ServiceStatus.disabled) ...[
+          if (_isGPSoN()) ...[
             const SizedBox(width: 20),
             const CircularProgressIndicator(),
           ],
@@ -107,15 +106,19 @@ class _Location extends State<LocationBuilder> {
 
 
   Column _getStyledCoordinate(String title, double coo) {
-    const TextStyle coordinatesValueStyle = TextStyle(fontSize: 32, color: Colors.blue, fontWeight: FontWeight.bold);
-    const TextStyle coordinatesTitleStyle = TextStyle(fontSize: 14, color: Colors.green, fontWeight: FontWeight.w600);
+    const TextStyle coordinatesValueStyle = TextStyle(fontSize: 35, color: Colors.blue, fontWeight: FontWeight.bold);
+    TextStyle coordinatesTitleStyle = TextStyle(fontSize: 15, color: Colors.green[700], fontWeight: FontWeight.w600);
 
     return Column(
-          children: <Widget>[
-            Text(title, style: coordinatesTitleStyle,),
-            Text(coo.toStringAsFixed(5), style: coordinatesValueStyle,)
-          ],
-        );
+      children: <Widget>[
+        Text(title, style: coordinatesTitleStyle,),
+        Text(coo.toStringAsFixed(5), style: coordinatesValueStyle,)
+      ],
+    );
+  }
+
+  bool _isGPSoN() {
+    return _status == ServiceStatus.enabled;
   }
 
 }

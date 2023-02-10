@@ -11,8 +11,10 @@ class PermissionProvider {
 
     Future<void> requestEnableGPS() async {
       if (!await Permission.location.isGranted) {
-        await [Permission.locationWhenInUse, Permission.locationAlways].request();
-        location.requestService();
+        final statuses = await [Permission.locationWhenInUse, Permission.locationAlways].request();
+        if (statuses.isNotEmpty && statuses[Permission.location]!.isGranted) {
+          location.requestService();
+        }
       } else if (!await Permission.location.serviceStatus.isDisabled) {
         location.requestService();
       }
