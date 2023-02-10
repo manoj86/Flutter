@@ -12,7 +12,7 @@
 ## Overview
 
    	 The app is build in Plug and Play design.
-	   ( The “plug and play” architecture allows for component/class transplanting. This approach allows a functionality encapsulated in a 			      class/component to  be replaced by an alternative solution when appropriate )
+	   (The “plug and play” architecture allows for component/class transplanting. This approach allows a functionality encapsulated in a 			      class/component to  be replaced by an alternative solution when appropriate)
    
 	 App uses the device's Gyroscope to get the Heading data for the Compass and GPS for location coordinates.
    
@@ -69,7 +69,9 @@ Added to AndroidManifest.xml file: <br>
 &emsp; import 'dart:math' as math; <br>
 &emsp; import 'package:flutter/material.dart'; <br>
 &emsp; import 'package:geolocator/geolocator.dart'; <br>
-&emsp; import 'package:location/location.dart' hide PermissionStatus ; // Since both the packages using same var 'PermissionStatus'. Hide one. <br>
+
+&emsp;&emsp; Since both the packages using same var 'PermissionStatus'. Hide one. <br>
+&emsp; import 'package:location/location.dart' hide PermissionStatus; <br>
 &emsp; import 'package:permission_handler/permission_handler.dart'; <br><br>
 
 
