@@ -98,8 +98,6 @@ Add the following lines below inside ios/Runner/Info.plist in order to access th
 -------------------
 ## Class-Diagram
 -------------------
-<br>
-<img width="1368" alt="Class Diagram" src="https://user-images.githubusercontent.com/3163167/217630164-9af7dc9a-0f51-4e01-b500-fc63e2eb3fab.png">
 
-
+![NavigatorApp-ClassDiagram](https://user-images.githubusercontent.com/3163167/218511912-82b92036-76f6-4a65-90de-19c56bd1027e.png)
 
