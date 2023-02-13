@@ -1,10 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:navigator/animator.dart';
 import 'package:navigator/permission_provider.dart';
 
 
-enum _CoordinatesTitle { latitude, longitude }
+enum _CoordinatesTitle {
+  lat("latitude"),
+  lng("longitude");
+
+  const _CoordinatesTitle(this.text);
+  final String text;
+}
 
 class LocationBuilder extends StatefulWidget {
   const LocationBuilder({super.key});
@@ -17,49 +24,12 @@ class LocationBuilder extends StatefulWidget {
 class _Location extends State<LocationBuilder>  with TickerProviderStateMixin {
 
   ServiceStatus? _status;
-  late StreamSubscription<ServiceStatus> serviceStatusStream;
   late Position? _position;
+  late StreamSubscription<ServiceStatus> _serviceStatusStream;
+  Animator? _latitudeAnimationController;
+  Animator? _longitudeAnimationController;
   bool _animateLatitude = true;
   bool _animateLongitude = true;
-
-
-
-  // region Animation
-  late final AnimationController _latitudeAnimationController = AnimationController(
-    duration: const Duration(milliseconds: 400),
-    vsync: this,
-  );
-
-  late final Animation<double> _latitudeFadeAnimation = CurvedAnimation(
-    parent: _latitudeAnimationController,
-    curve: Curves.easeIn,
-  )..addStatusListener((status) {
-    if (status == AnimationStatus.completed) {
-      setState(() {
-        _latitudeAnimationController.stop();
-      });
-    }
-  });
-
-
-  late final AnimationController _longitudeAnimationController = AnimationController(
-    duration: const Duration(milliseconds: 400),
-    vsync: this,
-  );
-
-  late final Animation<double> _longitudeFadeAnimation = CurvedAnimation(
-    parent: _longitudeAnimationController,
-    curve: Curves.easeIn,
-  )..addStatusListener((status) {
-    if (status == AnimationStatus.completed) {
-      setState(() {
-        _longitudeAnimationController.stop();
-      });
-    }
-  });
-  //endregion
-
-
 
 
   @override
@@ -71,9 +41,7 @@ class _Location extends State<LocationBuilder>  with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    serviceStatusStream.cancel();
-    _latitudeAnimationController.dispose();
-    _longitudeAnimationController.dispose();
+    _serviceStatusStream.cancel();
     super.dispose();
   }
 
@@ -102,9 +70,9 @@ class _Location extends State<LocationBuilder>  with TickerProviderStateMixin {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
                           const SizedBox(width: 5),
-                          _getStyledCoordinate(_CoordinatesTitle.latitude, _animateLatitude),
+                          _getStyledCoordinate(_CoordinatesTitle.lat, _animateLatitude),
                           const SizedBox(width: 25), //Space
-                          _getStyledCoordinate(_CoordinatesTitle.longitude, _animateLongitude),
+                          _getStyledCoordinate(_CoordinatesTitle.lng, _animateLongitude),
                           const SizedBox(width: 5)
                         ]
                     )
@@ -151,28 +119,30 @@ class _Location extends State<LocationBuilder>  with TickerProviderStateMixin {
   //endregion
 
   //region Coordinates
-  Column _getStyledCoordinate(Enum title, bool animate) {
+  Column _getStyledCoordinate(_CoordinatesTitle title, bool animate) {
     const TextStyle coordinatesValueStyle = TextStyle(fontSize: 35, color: Colors.blue, fontWeight: FontWeight.bold);
     TextStyle coordinatesTitleStyle = TextStyle(fontSize: 17, color: Colors.green[700], fontWeight: FontWeight.w600);
-    bool isLat = title == _CoordinatesTitle.latitude;
+    bool isLat = title == _CoordinatesTitle.lat;
     String coo = (isLat ? _position?.latitude : _position?.longitude)?.toStringAsFixed(6) ?? "";
-    Animation<double> animation = isLat ? _latitudeFadeAnimation : _longitudeFadeAnimation;
-    String titleValue = isLat ? 'Latitude' : 'Longitude';
 
-    if (animate) {
-      isLat ? _latitudeAnimationController.forward(from: 0) : _longitudeAnimationController.forward(from: 0);
+    if(isLat) {
+      _latitudeAnimationController ??= Animator();
+      _latitudeAnimationController?.style = coordinatesValueStyle;
+      _latitudeAnimationController?.displayText.value = coo;
+    } else {
+      _longitudeAnimationController ??= Animator();
+      _longitudeAnimationController?.style = coordinatesValueStyle;
+      _longitudeAnimationController?.displayText.value = coo;
     }
 
     return Column(
       children: <Widget>[
-        Text(titleValue, style: coordinatesTitleStyle,),
-        FadeTransition(
-            opacity: animation,
-            child: Text(coo, style: coordinatesValueStyle,)
-        ),
+        Text(title.text, style: coordinatesTitleStyle,),
+        isLat ? _latitudeAnimationController! : _longitudeAnimationController!
       ],
     );
   }
+
 
   setCoordinates(AsyncSnapshot<Position> snapshot) {
     Position newPosition = snapshot.data!;
@@ -187,7 +157,7 @@ class _Location extends State<LocationBuilder>  with TickerProviderStateMixin {
 
   Future<void> listenToServiceStatusChange() async {
     _status = await Geolocator.isLocationServiceEnabled() ? ServiceStatus.enabled : ServiceStatus.disabled;
-    serviceStatusStream = Geolocator.getServiceStatusStream().listen(
+    _serviceStatusStream = Geolocator.getServiceStatusStream().listen(
             (ServiceStatus status) {
           setState(() {
             _status = status;
